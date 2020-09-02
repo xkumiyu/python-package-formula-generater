@@ -38,7 +38,8 @@ example:
 
 ## ToDo
 
-- error handling
 - debug option
 - specify python version (default: 3.8)
 - overwrite check
+- add depends_on template
+- docker file

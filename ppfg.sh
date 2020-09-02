@@ -5,6 +5,11 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
+if ! type python >/dev/null 2>&1; then
+  echo "Error: Python is required." 1>&2
+  exit 1
+fi
+
 version=$1
 package=$PPFG_PACKAGE
 desc=$PPFG_DESC
@@ -16,7 +21,6 @@ if [ -z "$package" ]; then
 fi
 
 tmpdir=$(mktemp -d)
-echo $tmpdir
 
 trap "rm -rf $tmpdir" EXIT
 trap "rm -rf $tmpdir; exit 1" INT PIPE TERM
@@ -31,6 +35,11 @@ pip install homebrew-pypi-poet $package==$version > /dev/null
 
 echo "Generate formula file using poet"
 poet -f $package==$version > $tmpdir/generated.rb
+
+if [ ! -e $tmpdir/generated.rb ]; then
+  echo "Error: Can not unable to generate a file using post." 1>&2
+  exit 1
+fi
 
 echo "Rewrite formula file"
 sed -e "s/desc \"Shiny new formula\"/desc \"$desc\"/" \
@@ -50,6 +59,6 @@ if [ -e $tmpdir/replaced.rb ]; then
   cp $tmpdir/replaced.rb $outfile
   echo "\nGenerated to $outfile"
 else
-  echo "Error"
+  echo "Error" 1>&2
   exit 1
 fi
