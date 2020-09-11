@@ -1,11 +1,19 @@
 # Python Package Formula Generater
 
-This script automatically generates python package formula file using [homebrew-pypi-poet](https://github.com/tdsmith/homebrew-pypi-poet).
+It automatically generates python package formula file using [homebrew-pypi-poet](https://github.com/tdsmith/homebrew-pypi-poet).
+
+## Requirements
+
+- Python 3.8
 
 ## Installation
 
 ```sh
 git clone https://github.com/xkumiyu/python-package-formula-generater
+```
+
+```sh
+export PATH=$pwd/bin:$PATH
 ```
 
 ## Configuration
@@ -31,7 +39,7 @@ Note the indentation, as it will be inserted as is.
 ## Usage
 
 ```text
-./ppfg.sh [OPTIONS] VERSION
+ppfg [OPTIONS] VERSION
 ```
 
 Note that the options must be written before the arguments.
@@ -39,7 +47,7 @@ Note that the options must be written before the arguments.
 example:
 
 ```sh
-./ppfg.sh 1.0.0
+ppfg 1.0.0
 ```
 
 For more information, run `-h` option.

@@ -1,11 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
-PPFG_VERSION="0.1.0"
+readonly NAME="ppfg"
+readonly VERSION="0.1.0"
 
 # argument and option analysis
 show_usage() {
   cat << EOS
-Usage: $0 [OPTIONS] VERSION
+Usage: $NAME [OPTIONS] VERSION
 
   Automatically generates python package formula file
 
@@ -19,14 +20,24 @@ EOS
 }
 
 show_version() {
-  echo "ppfg $PPFG_VERSION"
+  echo "$NAME $VERSION"
   exit 0
+}
+
+usage_error() {
+  error_message=$1
+  cat << EOS
+$error_message
+
+Try '$NAME -h' for help.
+EOS
+  exit 1
 }
 
 outdir="."
 configdif="$HOME/.ppfg"
 
-while getopts c:o:Vh OPT
+while getopts :c:o:Vh OPT
 do
   case $OPT in
     c) configdif=$OPTARG
@@ -37,15 +48,16 @@ do
       ;;
     h) show_usage
       ;;
+    \?) usage_error "Error: No such option."
+      ;;
   esac
 done
+
 
 shift $((OPTIND - 1))
 
 if [ $# -ne 1 ]; then
-  echo "Error: Missing argument 'VERSION'."
-  echo
-  show_usage
+  usage_error "Error: Missing argument 'VERSION'."
 fi
 version=$1
 
