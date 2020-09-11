@@ -3,6 +3,8 @@
 readonly NAME="ppfg"
 readonly VERSION="0.1.0"
 
+readonly POET_VERSION="0.10.0"
+
 # argument and option analysis
 show_usage() {
   cat << EOS
@@ -15,6 +17,7 @@ Options:
   -o PATH  Path of output directory [default: .]
   -V       Show the version and exit
   -h       Show this message and exit
+  -d       Enable debug mode
 EOS
   exit 0
 }
@@ -25,9 +28,9 @@ show_version() {
 }
 
 usage_error() {
-  error_message=$1
+  local _error_message=$1
   cat << EOS
-$error_message
+$_error_message
 
 Try '$NAME -h' for help.
 EOS
@@ -35,12 +38,15 @@ EOS
 }
 
 outdir="."
-configdif="$HOME/.ppfg"
+config_dif="$HOME/.ppfg"
+debug=0
 
-while getopts :c:o:Vh OPT
+while getopts :c:do:Vh OPT
 do
   case $OPT in
-    c) configdif=$OPTARG
+    c) config_dif=$OPTARG
+      ;;
+    d) debug=1
       ;;
     o) outdir=$OPTARG
       ;;
@@ -52,7 +58,6 @@ do
       ;;
   esac
 done
-
 
 shift $((OPTIND - 1))
 
@@ -66,8 +71,8 @@ if [ ! -d $outdir ]; then
   exit 1
 fi
 
-config="$configdif/config"
-template="$configdif/install.template"
+config="$config_dif/config"
+template_dir="$config_dif/template"
 if [ ! -f $config ]; then
   echo "Error: Config file not found: $config" 1>&2
   exit 1
@@ -105,9 +110,14 @@ fi
 
 # make temporary directory
 tmpdir=$(mktemp -d)
-
-trap "rm -rf $tmpdir" EXIT
-trap "rm -rf $tmpdir; exit 1" INT PIPE TERM
+if [ $debug -eq 1 ]; then
+  echo "Create temporary directory: $tmpdir"
+  echo "The temporary directory is NOT automatically deleted in debug mode."
+  echo
+else
+  trap "rm -rf $tmpdir" EXIT
+  trap "rm -rf $tmpdir; exit 1" INT PIPE TERM
+fi
 
 
 # processing
@@ -119,7 +129,7 @@ source $tmpdir/venv/bin/activate
 pip install -U pip > /dev/null
 
 echo "Install python pakage"
-pip install homebrew-pypi-poet > /dev/null
+pip install homebrew-pypi-poet==$POET_VERSION > /dev/null
 if ! type poet >/dev/null 2>&1; then
   echo "Error: poet could not be installed." 1>&2
   exit 1
@@ -132,31 +142,67 @@ fi
 
 
 echo "Generate formula file using poet"
-poet -f $package==$version > $tmpdir/generated.rb
-if [ ! -f $tmpdir/generated.rb ]; then
+poet -f $package==$version > "$tmpdir/generated.rb"
+if [ ! -f "$tmpdir/generated.rb" ]; then
   echo "Error: Can not unable to generate a file using post." 1>&2
   exit 1
 fi
 
 echo "Rewrite formula file"
+
+cut_text() {
+  local _start=$1
+  local _end=$2
+  head -n $_end | tail -n $(($_end - $_start + 1))
+}
+
+add_indent() {
+  while IFS= read line
+  do
+    if [ -n "$line" ]; then
+      echo "  $line"
+    else
+      echo
+    fi
+  done
+}
+
 sed -e "s/desc \"Shiny new formula\"/desc \"$desc\"/" \
-  $tmpdir/generated.rb > $tmpdir/replaced-1.rb
-sed -e 's/depends_on "python3"/depends_on "python@3.8"/' \
-  $tmpdir/replaced-1.rb > $tmpdir/replaced-2.rb
+  "$tmpdir/generated.rb" > "$tmpdir/sed-desc.rb"
+head -n 8 "$tmpdir/sed-desc.rb" > "$tmpdir/head.rb"
 
-if [ -f $template ]; then
-  echo "Use template: $template"
-  n=$(wc -l $tmpdir/replaced-2.rb | awk '{print $1}')
-  head -n $((n-9)) $tmpdir/replaced-2.rb > $tmpdir/replaced-3.rb
-  cat $tmpdir/replaced-3.rb $template > $tmpdir/replaced.rb
+legnth=$(wc -l "$tmpdir/generated.rb" | awk '{print $1}')
+cat "$tmpdir/generated.rb" | cut_text 11 $((legnth - 9)) > "$tmpdir/resources.rb"
+
+if [ -f "$template_dir/install.rb" ]; then
+  add_indent < "$template_dir/install.rb" > "$tmpdir/install.rb"
 else
-  cp $tmpdir/replaced{-2,}.rb
+  cat > "$tmpdir/install.rb" << EOS
+  def install
+    virtualenv_create(libexec, "python3")
+    virtualenv_install_with_resources
+  end
+
+  test do
+    false
+  end
+EOS
 fi
 
-if [ -f $tmpdir/replaced.rb ]; then
-  cp $tmpdir/replaced.rb $outfile
-  echo -e "\nGenerated to $outfile"
+if [ -f "$template_dir/depends.rb" ]; then
+  add_indent < "$template_dir/depends.rb" > "$tmpdir/depends.rb"
 else
-  echo "Error" 1>&2
-  exit 1
+  echo '  depends_on "python@3.8"' > "$tmpdir/depends.rb"
 fi
+echo >> "$tmpdir/depends.rb"
+
+cat \
+  "$tmpdir/head.rb" \
+  "$tmpdir/depends.rb" \
+  "$tmpdir/resources.rb" \
+  "$tmpdir/install.rb" \
+  > "$tmpdir/replaced.rb"
+echo "end" >> "$tmpdir/replaced.rb"
+
+cp "$tmpdir/replaced.rb" $outfile
+echo -e "\nGenerated to $outfile"

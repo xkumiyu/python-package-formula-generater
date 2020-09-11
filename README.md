@@ -23,22 +23,32 @@ desc="description of my-package"
 
 and place it in `~/.ppfg/config`.
 
-If you change install function, create template file like this:
+### Optional
+
+If you change install/test function, create template file like this:
 
 ```rb
-  def install
-    virtualenv_create(libexec, "python3")
-    virtualenv_install_with_resources
-  end
+def install
+  virtualenv_create(libexec, "python3")
+  virtualenv_install_with_resources
+end
 
-  test do
-    false
-  end
+test do
+  false
 end
 ```
 
-and place it in `~/.ppfg/install.template`.
-Note the indentation, as it will be inserted as is.
+and place it in `~/.ppfg/template/install.rb`.
+
+If you change depends_on block, create template file like this:
+
+```rb
+depends_on "python@3.8"
+```
+
+and place it in `~/.ppfg/template/depends.rb`.
+
+If these files does not exist, the above codes will be inserted by default.
 
 ## Usage
 
@@ -58,10 +68,10 @@ For more information, run `-h` option.
 
 ## ToDo
 
-- [ ] debug option
+- [x] debug option
 - [ ] specify python version (default: 3.8) / python path
 - [x] overwrite check
-- [ ] add depends_on template
+- [x] add depends_on template
 - [x] using config file
 - [x] installation using brew
 - [ ] multi package
