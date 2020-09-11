@@ -9,31 +9,35 @@ It automatically generates python package formula file using [homebrew-pypi-poet
 ## Installation
 
 ```sh
-git clone https://github.com/xkumiyu/python-package-formula-generater
-```
-
-```sh
-export PATH=$pwd/bin:$PATH
+brew install xkumiyu/tap/ppfg
 ```
 
 ## Configuration
 
-Before using this script, you need to create config directory and file like this:
+Before using this script, you need to create config file like this:
 
 ```sh
-mkdir ~/.ppfg
-cp config.example ~/.ppfg/config
+package="my-package"
+desc="description of my-package"
 ```
 
-and rewrite `~/.ppfg/config` and set the package name and description.
+and place it in `~/.ppfg/config`.
 
-If you change install/test function, create `install.template`:
+If you change install function, create template file like this:
 
-```sh
-cp install.template.example ~/.ppfg/install.template
+```rb
+  def install
+    virtualenv_create(libexec, "python3")
+    virtualenv_install_with_resources
+  end
+
+  test do
+    false
+  end
+end
 ```
 
-and rewrite `~/.ppfg/install.template`.
+and place it in `~/.ppfg/install.template`.
 Note the indentation, as it will be inserted as is.
 
 ## Usage
@@ -54,10 +58,11 @@ For more information, run `-h` option.
 
 ## ToDo
 
-- debug option
-- specify python version (default: 3.8) / python path
-- ~~overwrite check~~
-- add depends_on template
-- docker file
-- ~~using config file~~
-- brew install
+- [ ] debug option
+- [ ] specify python version (default: 3.8) / python path
+- [x] overwrite check
+- [ ] add depends_on template
+- [x] using config file
+- [x] installation using brew
+- [ ] multi package
+- [ ] auto configuration

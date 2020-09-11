@@ -155,7 +155,7 @@ fi
 
 if [ -f $tmpdir/replaced.rb ]; then
   cp $tmpdir/replaced.rb $outfile
-  echo "\nGenerated to $outfile"
+  echo -e "\nGenerated to $outfile"
 else
   echo "Error" 1>&2
   exit 1
