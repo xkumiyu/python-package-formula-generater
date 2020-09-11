@@ -1,29 +1,105 @@
 #!/bin/sh
 
+PPFG_VERSION="0.1.0"
+
+# argument and option analysis
+show_usage() {
+  cat << EOS
+Usage: $0 [OPTIONS] VERSION
+
+  Automatically generates python package formula file
+
+Options:
+  -c PATH  Path of config directory [default: ~/.ppfg]
+  -o PATH  Path of output directory [default: .]
+  -V       Show the version and exit
+  -h       Show this message and exit
+EOS
+  exit 0
+}
+
+show_version() {
+  echo "ppfg $PPFG_VERSION"
+  exit 0
+}
+
+outdir="."
+configdif="$HOME/.ppfg"
+
+while getopts c:o:Vh OPT
+do
+  case $OPT in
+    c) configdif=$OPTARG
+      ;;
+    o) outdir=$OPTARG
+      ;;
+    V) show_version
+      ;;
+    h) show_usage
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 if [ $# -ne 1 ]; then
-  echo "Usage: ppfg VERSION" 1>&2
+  echo "Error: Missing argument 'VERSION'."
+  echo
+  show_usage
+fi
+version=$1
+
+if [ ! -d $outdir ]; then
+  echo "Error: Output directory not found: $outdir"
   exit 1
 fi
 
+config="$configdif/config"
+template="$configdif/install.template"
+if [ ! -f $config ]; then
+  echo "Error: Config file not found: $config" 1>&2
+  exit 1
+fi
+
+# Read config file and $package, $desc are assingned values.
+. $config
+
+outfile="$outdir/$package.rb"
+if [ -z "$package" ]; then
+  echo "Error: pacakge is not set." 1>&2
+  exit 1
+fi
+
+if [ -e $outfile ]; then
+  echo "Error: File already exists: $outfile" 1>&2
+  exit
+fi
+
+
+# check python
 if ! type python >/dev/null 2>&1; then
   echo "Error: Python is required." 1>&2
   exit 1
 fi
 
-version=$1
-package=$PPFG_PACKAGE
-desc=$PPFG_DESC
-outfile=dist/$package.rb
+python_version_major=$(python -c "import sys; print(sys.version_info.major)")
+python_version_minor=$(python -c "import sys; print(sys.version_info.minor)")
 
-if [ -z "$package" ]; then
-  echo "Error: Environment variable PPFG_PACKAGE is not set." 1>&2
+if [ $python_version_major -ne 3 ] || [ $python_version_minor -ne 8 ]; then
+  echo "Error: Python 3.8 is required: $(python -V)" 1>&2
   exit 1
 fi
 
+
+# make temporary directory
 tmpdir=$(mktemp -d)
 
 trap "rm -rf $tmpdir" EXIT
 trap "rm -rf $tmpdir; exit 1" INT PIPE TERM
+
+
+# processing
+echo "Start generating formula file for $package $version"
 
 echo "Create python virtual environments"
 python -m venv $tmpdir/venv
@@ -31,12 +107,21 @@ source $tmpdir/venv/bin/activate
 pip install -U pip > /dev/null
 
 echo "Install python pakage"
-pip install homebrew-pypi-poet $package==$version > /dev/null
+pip install homebrew-pypi-poet > /dev/null
+if ! type poet >/dev/null 2>&1; then
+  echo "Error: poet could not be installed." 1>&2
+  exit 1
+fi
+pip install $package==$version > /dev/null
+if [ $? -ne 0 ]; then
+  echo "Error: $package $version could not be installed." 1>&2
+  exit 1
+fi
+
 
 echo "Generate formula file using poet"
 poet -f $package==$version > $tmpdir/generated.rb
-
-if [ ! -e $tmpdir/generated.rb ]; then
+if [ ! -f $tmpdir/generated.rb ]; then
   echo "Error: Can not unable to generate a file using post." 1>&2
   exit 1
 fi
@@ -47,15 +132,16 @@ sed -e "s/desc \"Shiny new formula\"/desc \"$desc\"/" \
 sed -e 's/depends_on "python3"/depends_on "python@3.8"/' \
   $tmpdir/replaced-1.rb > $tmpdir/replaced-2.rb
 
-if [ -e install.template ]; then
+if [ -f $template ]; then
+  echo "Use template: $template"
   n=$(wc -l $tmpdir/replaced-2.rb | awk '{print $1}')
   head -n $((n-9)) $tmpdir/replaced-2.rb > $tmpdir/replaced-3.rb
-  cat $tmpdir/replaced-3.rb install.template > $tmpdir/replaced.rb
+  cat $tmpdir/replaced-3.rb $template > $tmpdir/replaced.rb
 else
   cp $tmpdir/replaced{-2,}.rb
 fi
 
-if [ -e $tmpdir/replaced.rb ]; then
+if [ -f $tmpdir/replaced.rb ]; then
   cp $tmpdir/replaced.rb $outfile
   echo "\nGenerated to $outfile"
 else

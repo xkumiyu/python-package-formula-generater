@@ -2,33 +2,39 @@
 
 This script automatically generates python package formula file using [homebrew-pypi-poet](https://github.com/tdsmith/homebrew-pypi-poet).
 
-## Configure
-
-You must set `PPFG_PACKAGE`:
+## Installation
 
 ```sh
-export PPFG_PACKAGE="my-package"
+git clone https://github.com/xkumiyu/python-package-formula-generater
 ```
 
-### Optional
+## Configuration
 
-If you set description, set `PPFG_DESC`:
+Before using this script, you need to create config directory and file like this:
 
 ```sh
-export PPFG_DESC="description of my-package"
+mkdir ~/.ppfg
+cp config.example ~/.ppfg/config
 ```
+
+and rewrite `~/.ppfg/config` and set the package name and description.
 
 If you change install/test function, create `install.template`:
 
 ```sh
-cp install.template{.example,}
+cp install.template.example ~/.ppfg/install.template
 ```
+
+and rewrite `~/.ppfg/install.template`.
+Note the indentation, as it will be inserted as is.
 
 ## Usage
 
-```sh
-./ppfg.sh VERSION
+```text
+./ppfg.sh [OPTIONS] VERSION
 ```
+
+Note that the options must be written before the arguments.
 
 example:
 
@@ -36,10 +42,14 @@ example:
 ./ppfg.sh 1.0.0
 ```
 
+For more information, run `-h` option.
+
 ## ToDo
 
 - debug option
-- specify python version (default: 3.8)
-- overwrite check
+- specify python version (default: 3.8) / python path
+- ~~overwrite check~~
 - add depends_on template
 - docker file
+- ~~using config file~~
+- brew install
