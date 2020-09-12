@@ -1,14 +1,13 @@
 #!/bin/bash
 
-readonly NAME="ppfg"
-readonly VERSION="0.1.0"
+readonly VERSION="0.1.1"
 
 readonly POET_VERSION="0.10.0"
 
 # argument and option analysis
 show_usage() {
   cat << EOS
-Usage: $NAME [OPTIONS] VERSION
+Usage: $(basename $0) [OPTIONS] VERSION
 
   Automatically generates python package formula file
 
@@ -23,16 +22,16 @@ EOS
 }
 
 show_version() {
-  echo "$NAME $VERSION"
+  echo "$(basename $0) $VERSION"
   exit 0
 }
 
 usage_error() {
   local _error_message=$1
-  cat << EOS
+  cat 1>&2 << EOS
 $_error_message
 
-Try '$NAME -h' for help.
+Try '$(basename $0) -h' for help.
 EOS
   exit 1
 }
@@ -65,9 +64,13 @@ if [ $# -ne 1 ]; then
   usage_error "Error: Missing argument 'VERSION'."
 fi
 version=$1
+if [[ ! $version =~ ^[0-9]+\.[0-9]+.*$ ]]; then
+  echo "Error: Invalid version format: $version"
+  exit 1
+fi
 
 if [ ! -d $outdir ]; then
-  echo "Error: Output directory not found: $outdir"
+  echo "Error: Output directory not found: $outdir" 1>&2
   exit 1
 fi
 
@@ -81,12 +84,12 @@ fi
 # Read config file and $package, $desc are assingned values.
 . $config
 
-outfile="$outdir/$package.rb"
 if [ -z "$package" ]; then
-  echo "Error: pacakge is not set." 1>&2
+  echo "Error: 'pacakge' is not set in the config file." 1>&2
   exit 1
 fi
 
+outfile="$outdir/$package.rb"
 if [ -e $outfile ]; then
   echo "Error: File already exists: $outfile" 1>&2
   exit
@@ -94,16 +97,19 @@ fi
 
 
 # check python
-if ! type python >/dev/null 2>&1; then
+if type python >/dev/null 2>&1; then
+  py='python'
+elif type python3 >/dev/null 2>&1; then
+  py='python3'
+else
   echo "Error: Python is required." 1>&2
   exit 1
 fi
 
-python_version_major=$(python -c "import sys; print(sys.version_info.major)")
-python_version_minor=$(python -c "import sys; print(sys.version_info.minor)")
-
+python_version_major=$(eval $py "-c 'import sys; print(sys.version_info.major)'")
+python_version_minor=$(eval $py "-c 'import sys; print(sys.version_info.minor)'")
 if [ $python_version_major -ne 3 ] || [ $python_version_minor -ne 8 ]; then
-  echo "Error: Python 3.8 is required: $(python -V)" 1>&2
+  echo "Error: Python 3.8 is required: $(eval $py -V)" 1>&2
   exit 1
 fi
 
@@ -124,7 +130,7 @@ fi
 echo "Start generating formula file for $package $version"
 
 echo "Create python virtual environments"
-python -m venv $tmpdir/venv
+eval $py "-m venv $tmpdir/venv"
 source $tmpdir/venv/bin/activate
 pip install -U pip > /dev/null
 
@@ -205,4 +211,5 @@ cat \
 echo "end" >> "$tmpdir/replaced.rb"
 
 cp "$tmpdir/replaced.rb" $outfile
-echo -e "\nGenerated to $outfile"
+echo
+echo "Generated to $outfile"

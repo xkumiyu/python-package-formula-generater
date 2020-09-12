@@ -6,6 +6,14 @@ It automatically generates python package formula file using [homebrew-pypi-poet
 
 - Python 3.8
 
+It use python or python3 commands in your PATH.
+
+If it's not installed, you can install it as follows:
+
+```sh
+brew install python@3.8
+```
+
 ## Installation
 
 ```sh
@@ -68,11 +76,14 @@ For more information, run `-h` option.
 
 ## ToDo
 
-- [x] debug option
+- [x] add debug option
 - [ ] specify python version (default: 3.8) / python path
 - [x] overwrite check
 - [x] add depends_on template
 - [x] using config file
 - [x] installation using brew
-- [ ] multi package
+- [ ] using multi package
 - [ ] auto configuration
+- [x] version check
+- [ ] show next step when installation
+- [ ] using long option
