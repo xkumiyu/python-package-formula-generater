@@ -37,7 +37,7 @@ If you change install/test function, create template file like this:
 
 ```rb
 def install
-  virtualenv_create(libexec, "python3")
+  virtualenv_create(libexec, "python3.8")
   virtualenv_install_with_resources
 end
 
@@ -87,3 +87,5 @@ For more information, run `-h` option.
 - [x] version check
 - [ ] show next step when installation
 - [ ] using long option
+- [x] force option to overwrite
+- [ ] fix a bug that the line breaks not correct when using backslashes in templates
