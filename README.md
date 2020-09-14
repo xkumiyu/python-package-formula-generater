@@ -88,4 +88,4 @@ For more information, run `-h` option.
 - [ ] show next step when installation
 - [ ] using long option
 - [x] force option to overwrite
-- [ ] fix a bug that the line breaks not correct when using backslashes in templates
+- [x] fix a bug that the line breaks not correct when using backslashes in templates
