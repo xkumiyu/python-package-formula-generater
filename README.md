@@ -2,6 +2,8 @@
 
 It automatically generates python package formula file using [homebrew-pypi-poet](https://github.com/tdsmith/homebrew-pypi-poet).
 
+[![GitHub Workflow Status][actions-status]][actions]
+
 ## Requirements
 
 - Python 3.8
@@ -89,3 +91,8 @@ For more information, run `-h` option.
 - [ ] using long option
 - [x] force option to overwrite
 - [x] fix a bug that the line breaks not correct when using backslashes in templates
+- [x] add github action
+- [ ] add ignore package option/config
+
+[actions]: https://github.com/xkumiyu/python-package-formula-generater/actions
+[actions-status]: https://img.shields.io/github/workflow/status/xkumiyu/python-package-formula-generater/Push%20Trigger
