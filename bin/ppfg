@@ -1,7 +1,6 @@
 #!/bin/bash
 
 readonly VERSION="0.2.0"
-
 readonly POET_VERSION="0.10.0"
 
 # argument and option analysis
@@ -115,8 +114,8 @@ fi
 
 python_version_major=$(eval $py "-c 'import sys; print(sys.version_info.major)'")
 python_version_minor=$(eval $py "-c 'import sys; print(sys.version_info.minor)'")
-if [ "$python_version_major" -ne 3 ] || [ "$python_version_minor" -ne 8 ]; then
-  echo "Error: Python 3.8 is required: $(eval $py -V)" 1>&2
+if [ "$python_version_major" -ne 3 ] || [ "$python_version_minor" -lt 7 ]; then
+  echo "Error: Python 3.7 or higher is required: $(eval $py -V)" 1>&2
   exit 1
 fi
 
@@ -136,6 +135,7 @@ fi
 # processing
 echo "Start generating formula file for $package $version"
 
+echo "Using $(eval $py -V)"
 echo "Create python virtual environments"
 eval $py "-m venv $tmpdir/venv"
 source "$tmpdir"/venv/bin/activate
@@ -192,7 +192,7 @@ if [ -f "$template_dir/install.rb" ]; then
 else
   cat > "$tmpdir/install.rb" << EOS
   def install
-    virtualenv_create(libexec, "python3.8")
+    virtualenv_create(libexec, "python3.$python_version_minor")
     virtualenv_install_with_resources
   end
 
@@ -206,7 +206,8 @@ if [ -f "$template_dir/depends.rb" ]; then
   echo "Using the template: $template_dir/depends.rb"
   add_indent < "$template_dir/depends.rb" > "$tmpdir/depends.rb"
 else
-  echo '  depends_on "python@3.8"' > "$tmpdir/depends.rb"
+  python_formula="python@$python_version_major.$python_version_minor"
+  echo "  depends_on \"$python_formula\"" > "$tmpdir/depends.rb"
 fi
 echo >> "$tmpdir/depends.rb"
 

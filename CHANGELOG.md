@@ -4,6 +4,7 @@
 
 Unreleased
 
+- Added support for multiple python versions.
 - Added `-f` option to enable overwriting.
 - Added check on version argument.
 - Made python3 command available.

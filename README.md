@@ -6,21 +6,18 @@ It automatically generates python package formula file using [homebrew-pypi-poet
 
 ## Requirements
 
-- Python 3.8
-
-It use python or python3 commands in your PATH.
-
-If it's not installed, you can install it as follows:
-
-```sh
-brew install python@3.8
-```
+You need Python 3.7 or higher.
+It uses `python` or `python3` commands in your PATH.
 
 ## Installation
+
+Install using homebrew:
 
 ```sh
 brew install xkumiyu/tap/ppfg
 ```
+
+or you can git clone this repository.
 
 ## Configuration
 
@@ -39,7 +36,7 @@ If you change install/test function, create template file like this:
 
 ```rb
 def install
-  virtualenv_create(libexec, "python3.8")
+  virtualenv_create(libexec, "python3.9")
   virtualenv_install_with_resources
 end
 
@@ -53,12 +50,12 @@ and place it in `~/.ppfg/template/install.rb`.
 If you change depends_on block, create template file like this:
 
 ```rb
-depends_on "python@3.8"
+depends_on "python@3.9"
 ```
 
 and place it in `~/.ppfg/template/depends.rb`.
 
-If these files does not exist, the above codes will be inserted by default.
+If these files does not exist and using python 3.9, the above codes will be inserted by default.
 
 ## Usage
 
@@ -79,7 +76,7 @@ For more information, run `-h` option.
 ## ToDo
 
 - [x] add debug option
-- [ ] specify python version (default: 3.8) / python path
+- [x] specify python path
 - [x] overwrite check
 - [x] add depends_on template
 - [x] using config file
