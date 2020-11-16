@@ -2,7 +2,7 @@
 
 ## 0.2.0
 
-Unreleased
+Released 2020-11-16
 
 - Added support for multiple python versions.
 - Added `-f` option to enable overwriting.
