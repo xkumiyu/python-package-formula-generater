@@ -32,20 +32,26 @@ and place it in `~/.ppfg/config`.
 
 ### Optional
 
-If you change install/test function, create template file like this:
+If you change install function, create template file like this:
 
 ```rb
 def install
   virtualenv_create(libexec, "python3.9")
   virtualenv_install_with_resources
 end
+```
 
+and place it in `~/.ppfg/template/install.rb`.
+
+If you change test function, create template file like this:
+
+```rb
 test do
   false
 end
 ```
 
-and place it in `~/.ppfg/template/install.rb`.
+and place it in `~/.ppfg/template/test.rb`.
 
 If you change depends_on block, create template file like this:
 

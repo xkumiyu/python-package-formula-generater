@@ -195,7 +195,15 @@ else
     virtualenv_create(libexec, "python3.$python_version_minor")
     virtualenv_install_with_resources
   end
+EOS
+fi
+echo >> "$tmpdir/install.rb"
 
+if [ -f "$template_dir/test.rb" ]; then
+  echo "Using the template: $template_dir/test.rb"
+  add_indent < "$template_dir/test.rb" > "$tmpdir/test.rb"
+else
+  cat > "$tmpdir/test.rb" << EOS
   test do
     false
   end
@@ -216,6 +224,7 @@ cat \
   "$tmpdir/depends.rb" \
   "$tmpdir/resources.rb" \
   "$tmpdir/install.rb" \
+  "$tmpdir/test.rb" \
   > "$tmpdir/replaced.rb"
 echo "end" >> "$tmpdir/replaced.rb"
 

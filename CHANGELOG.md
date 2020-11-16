@@ -7,6 +7,7 @@ Unreleased
 - Added support for multiple python versions.
 - Added `-f` option to enable overwriting.
 - Added check on version argument.
+- Added test function template.
 - Made python3 command available.
 - Modified the code using [shellcheck](https://github.com/koalaman/shellcheck).
 - Fixed error message when extra arguments are given.
